@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Avançado de Genética de Populações</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+            --warning: #f39c12;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        h1, h2, h3 {
+            color: var(--primary);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--secondary);
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        input[type="number"], input[type="range"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .range-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+        
+        button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 15px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button#resetBtn {
+            background-color: var(--accent);
+        }
+        
+        button#resetBtn:hover {
+            background-color: #c0392b;
+        }
+        
+        .results {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .chart-container {
+            height: 400px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .factors {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+        
+        .factor {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid var(--secondary);
+        }
+        
+        .stats-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: #e0e0e0;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .summary {
+            background-color: #e8f4fc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .generation-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .calculation-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid var(--success);
+        }
+        
+        .calculation-step {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .math-formula {
+            font-family: 'Courier New', monospace;
+            background-color: #f5f5f5;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+            display: inline-block;
+        }
+        
+        .math-value {
+            font-weight: bold;
+            color: var(--secondary);
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted #ccc;
+            cursor: help;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-weight: normal;
+            font-size: 14px;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .preset-btn {
+            background-color: var(--warning);
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        
+        .preset-btn:hover {
+            background-color: #e67e22;
+        }
+        
+        .info-panel {
+            background-color: #e8f4fc;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .export-buttons {
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .factors {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-box {
+                grid-template-columns: 1fr;
+            }
+            
+            .preset-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulador Avançado de Genética de Populações</h1>
+    
+    <div class="container">
+        <h2>Configuração Inicial da População</h2>
+        
+        <div class="preset-buttons">
+            <button class="preset-btn" data-preset="hw-equilibrium">Equilíbrio H-W</button>
+            <button class="preset-btn" data-preset="selection">Seleção Direcional</button>
+            <button class="preset-btn" data-preset="heterozygote">Vantagem do Heterozigoto</button>
+            <button class="preset-btn" data-preset="mutation">Equilíbrio Mutação-Seleção</button>
+            <button class="preset-btn" data-preset="founder">Efeito Fundador</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="populationSize">Tamanho da População:</label>
+            <input type="number" id="populationSize" min="10" max="1000000" value="1000">
+            <span class="tooltip">ℹ️
+                <span class="tooltiptext">Populações menores (N < 1000) apresentam mais deriva genética. Use "Infinito" para eliminar a deriva.</span>
+            </span>
+        </div>
+        
+        <div class="form-group">
+            <label for="initialA">Frequência Inicial do Alelo A (0 a 1):</label>
+            <div class="range-container">
+                <input type="range" id="initialA" min="0" max="1" step="0.01" value="0.7">
+                <span class="range-value" id="initialAValue">0.7</span>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="generations">Número de Gerações:</label>
+            <input type="number" id="generations" min="1" max="10000" value="100">
+        </div>
+        
+        <div class="form-group">
+            <label for="simulationRuns">Número de Simulações (para análise estatística):</label>
+            <input type="number" id="simulationRuns" min="1" max="100" value="5">
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Fatores Evolutivos</h2>
+        <div class="factors">
+            <div class="factor">
+                <h3>Mutação <span class="tooltip">ℹ️
+                    <span class="tooltiptext">Taxa de mutação por alelo por geração. Valores típicos: 10⁻⁵ a 10⁻⁸.</span>
+                </span></h3>
+                <div class="form-group">
+                    <label for="mutationAtoa">Taxa de mutação A → a (0 a 1):</label>
+                    <div class="range-container">
+                        <input type="range" id="mutationAtoa" min="0" max="0.1" step="0.0001" value="0.0001">
+                        <span class="range-value" id="mutationAtoaValue">0.0001</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="mutationatoA">Taxa de mutação a → A (0 a 1):</label>
+                    <div class="range-container">
+                        <input type="range" id="mutationatoA" min="0" max="0.1" step="0.0001" value="0.0001">
+                        <span class="range-value" id="mutationatoAValue">0.0001</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="factor">
+                <h3>Seleção Natural (Fitness) <span class="tooltip">ℹ️
+                    <span class="tooltiptext">Valor adaptativo dos genótipos. 1.0 = máxima aptidão, 0.0 = letal.</span>
+                </span></h3>
+                <div class="form-group">
+                    <label for="fitnessAA">Fitness do genótipo AA (0 a 1):</label>
+                    <div class="range-container">
+                        <input type="range" id="fitnessAA" min="0" max="1" step="0.01" value="1.0">
+                        <span class="range-value" id="fitnessAAValue">1.0</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fitnessAa">Fitness do genótipo Aa (0 a 1):</label>
+                    <div class="range-container">
+                        <input type="range" id="fitnessAa" min="0" max="1" step="0.01" value="1.0">
+                        <span class="range-value" id="fitnessAaValue">1.0</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fitnessaa">Fitness do genótipo aa (0 a 1):</label>
+                    <div class="range-container">
+                        <input type="range" id="fitnessaa" min="0" max="1" step="0.01" value="1.0">
+                        <span class="range-value" id="fitnessaaValue">1.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="factor">
+                <h3>Migração <span class="tooltip">ℹ️
+                    <span class="tooltiptext">Proporção de migrantes por geração. Valores típicos: 0.001 a 0.1.</span>
+                </span></h3>
+                <div class="form-group">
+                    <label for="migrationRate">Taxa de migração (0 a 1):</label>
+                    <div class="range-container">
+                        <input type="range" id="migrationRate" min="0" max="0.5" step="0.01" value="0">
+                        <span class="range-value" id="migrationRateValue">0</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="migrantA">Frequência do alelo A na população migrante (0 a 1):</label>
+                    <div class="range-container">
+                        <input type="range" id="migrantA" min="0" max="1" step="0.01" value="0.5">
+                        <span class="range-value" id="migrantAValue">0.5</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <h4>Ordem de Aplicação dos Fatores Evolutivos:</h4>
+            <ol>
+                <li>Mutacao</li>
+                <li>Selecao Natural</li>
+                <li>Migracao</li>
+                <li>Deriva Genetica (se populacao finita)</li>
+            </ol>
+            <p>Esta ordem segue a convencao padrão em modelos de genetica de populacoes.</p>
+        </div>
+    </div>
+    
+    <button id="simulateBtn">Executar Simulação</button>
+    <button id="resetBtn">Redefinir Parâmetros</button>
+    <div class="export-buttons">
+        <button id="exportDataBtn">Exportar Dados (CSV)</button>
+        <button id="exportConfigBtn">Exportar Configuração</button>
+    </div>
+    
+    <div class="container results" id="results" style="display: none;">
+        <h2>Resultados da Simulação</h2>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="charts">Gráficos</div>
+            <div class="tab" data-tab="stats">Estatísticas</div>
+            <div class="tab" data-tab="data">Dados Completos</div>
+            <div class="tab" data-tab="calculations">Cálculos</div>
+            <div class="tab" data-tab="interpretation">Interpretação</div>
+        </div>
+        
+        <div class="tab-content active" id="charts-tab">
+            <div class="chart-container">
+                <canvas id="frequencyChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="genotypeChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="diversityChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="multipleRunsChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="stats-tab">
+            <h3>Análise Estatística</h3>
+            
+            <div class="stats-box">
+                <div class="stat-card">
+                    <div>Coeficiente de Endogamia (F)</div>
+                    <div class="stat-value" id="fStat">0.000</div>
+                    <div>Desvio de Hardy-Weinberg</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div>Diversidade Genética (H)</div>
+                    <div class="stat-value" id="diversityStat">0.000</div>
+                    <div>Heterozigosidade</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div>Força da Seleção (s)</div>
+                    <div class="stat-value" id="selectionStat">0.000</div>
+                    <div>Coeficiente de seleção</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div>Alelo Fixado</div>
+                    <div class="stat-value" id="fixedStat">Nenhum</div>
+                    <div>Estado final</div>
+                </div>
+            </div>
+            
+            <div class="summary">
+                <h4>Resumo da Simulação</h4>
+                <p id="simulationSummary">Execute a simulação para ver o resumo...</p>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="data-tab">
+            <h3>Dados Detalhados por Geração</h3>
+            <div class="generation-info">
+                <p>Mostrando cada 5ª geração. Use o zoom nos gráficos para visualizar detalhes.</p>
+            </div>
+            <div id="tableContainer"></div>
+        </div>
+        
+        <div class="tab-content" id="calculations-tab">
+            <h3>Cálculos Utilizados na Simulação</h3>
+            <div class="calculation-info">
+                <h4>Fórmulas Aplicadas:</h4>
+                <div class="calculation-step">
+                    <p><strong>1. Equilíbrio de Hardy-Weinberg (Geração 0):</strong></p>
+                    <p class="math-formula">Frequência esperada de AA = p² = <span id="calc-initial-p" class="math-value">0.7</span>² = <span id="calc-initial-aa" class="math-value">0.49</span></p>
+                    <p class="math-formula">Frequência esperada de Aa = 2pq = 2×<span id="calc-initial-p2" class="math-value">0.7</span>×<span id="calc-initial-q" class="math-value">0.3</span> = <span id="calc-initial-aa" class="math-value">0.42</span></p>
+                    <p class="math-formula">Frequência esperada de aa = q² = <span id="calc-initial-q2" class="math-value">0.3</span>² = <span id="calc-initial-aa" class="math-value">0.09</span></p>
+                    <p>Onde p = frequência do alelo A, q = frequência do alelo a</p>
+                </div>
+                
+                <div class="calculation-step">
+                    <p><strong>2. Mutação (por geração):</strong></p>
+                    <p class="math-formula">Novo p = p(1 - μ) + qν = <span id="calc-mutation-p" class="math-value">0.7</span>×(1-<span id="calc-mutation-mu" class="math-value">0.01</span>) + <span id="calc-mutation-q" class="math-value">0.3</span>×<span id="calc-mutation-nu" class="math-value">0.01</span> = <span id="calc-mutation-result" class="math-value">0.694</span></p>
+                    <p class="math-formula">Novo q = q(1 - ν) + pμ = <span id="calc-mutation-q2" class="math-value">0.3</span>×(1-<span id="calc-mutation-nu2" class="math-value">0.01</span>) + <span id="calc-mutation-p2" class="math-value">0.7</span>×<span id="calc-mutation-mu2" class="math-value">0.01</span> = <span id="calc-mutation-result2" class="math-value">0.306</span></p>
+                    <p>Onde μ = taxa de mutação A→a, ν = taxa de mutação a→A</p>
+                </div>
+                
+                <div class="calculation-step">
+                    <p><strong>3. Seleção Natural (por geração):</strong></p>
+                    <p class="math-formula">Fitness médio = p²w₁₁ + 2pqw₁₂ + q²w₂₂</p>
+                    <p class="math-formula">= <span id="calc-selection-p2" class="math-value">0.49</span>×<span id="calc-selection-w11" class="math-value">1.0</span> + 2×<span id="calc-selection-p" class="math-value">0.7</span>×<span id="calc-selection-q" class="math-value">0.3</span>×<span id="calc-selection-w12" class="math-value">0.9</span> + <span id="calc-selection-q2" class="math-value">0.09</span>×<span id="calc-selection-w22" class="math-value">0.8</span> = <span id="calc-selection-meanfitness" class="math-value">0.922</span></p>
+                    <p class="math-formula">Nova frequência de p após seleção = (p²w₁₁ + pqw₁₂) / fitness médio</p>
+                    <p class="math-formula">= (<span id="calc-selection-p2-2" class="math-value">0.49</span>×<span id="calc-selection-w11-2" class="math-value">1.0</span> + <span id="calc-selection-p-2" class="math-value">0.7</span>×<span id="calc-selection-q-2" class="math-value">0.3</span>×<span id="calc-selection-w12-2" class="math-value">0.9</span>) / <span id="calc-selection-meanfitness-2" class="math-value">0.922</span> = <span id="calc-selection-result" class="math-value">0.718</span></p>
+                    <p>Onde w₁₁ = fitness de AA, w₁₂ = fitness de Aa, w₂₂ = fitness de aa</p>
+                </div>
+                
+                <div class="calculation-step">
+                    <p><strong>4. Migração (por geração):</strong></p>
+                    <p class="math-formula">Novo p = (1 - m)p + mpₘ = (1-<span id="calc-migration-m" class="math-value">0.0</span>)×<span id="calc-migration-p" class="math-value">0.7</span> + <span id="calc-migration-m2" class="math-value">0.0</span>×<span id="calc-migration-pm" class="math-value">0.5</span> = <span id="calc-migration-result" class="math-value">0.7</span></p>
+                    <p>Onde m = taxa de migração, pₘ = frequência do alelo A na população migrante</p>
+                </div>
+                
+                <div class="calculation-step">
+                    <p><strong>5. Deriva Genética (em populações finitas):</strong></p>
+                    <p class="math-formula">Número de alelos A na próxima geração ~ Binomial(2N, p)</p>
+                    <p class="math-formula">Número esperado de alelos A = 2×<span id="calc-drift-N" class="math-value">1000</span>×<span id="calc-drift-p" class="math-value">0.7</span> = <span id="calc-drift-expected" class="math-value">1400</span></p>
+                    <p>Onde N = tamanho da população, p = frequência atual do alelo A</p>
+                </div>
+                
+                <div class="calculation-step">
+                    <p><strong>6. Coeficiente de Endogamia (F):</strong></p>
+                    <p class="math-formula">F = (Hₑ - Hₒ) / Hₑ = (<span id="calc-f-he" class="math-value">0.42</span> - <span id="calc-f-ho" class="math-value">0.42</span>) / <span id="calc-f-he2" class="math-value">0.42</span> = <span id="calc-f-result" class="math-value">0.0</span></p>
+                    <p>Onde Hₑ = heterozigosidade esperada, Hₒ = heterozigosidade observada</p>
+                </div>
+                
+                <div class="calculation-step">
+                    <p><strong>7. Diversidade Genética (H):</strong></p>
+                    <p class="math-formula">H = 1 - (p² + q²) = 2pq = 2×<span id="calc-diversity-p" class="math-value">0.7</span>×<span id="calc-diversity-q" class="math-value">0.3</span> = <span id="calc-diversity-result" class="math-value">0.42</span></p>
+                    <p>H = heterozigosidade esperada</p>
+                </div>
+            </div>
+            
+            <div class="calculation-info">
+                <h4>Valores dos Parâmetros Usados:</h4>
+                <div id="parametersUsed"></div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="interpretation-tab">
+            <h3>Interpretação dos Resultados</h3>
+            <div class="info-panel">
+                <h4 id="interpretation-title">Execute a simulação para obter uma interpretação</h4>
+                <p id="interpretation-content">Os resultados serão analisados aqui após a execução da simulação, fornecendo insights sobre os processos evolutivos em ação.</p>
+                
+                <h4>Guia de Interpretação:</h4>
+                <ul>
+                    <li><strong>Frequências alélicas estáveis:</strong> Podem indicar equilíbrio entre forças evolutivas</li>
+                    <li><strong>Mudança gradual:</strong> Sugere seleção direcional ou migração</li>
+                    <li><strong>Flutuações aleatórias:</strong> Indicam deriva genética (especialmente em populações pequenas)</li>
+                    <li><strong>Manutenção de polimorfismo:</strong> Pode ser devido à vantagem do heterozigoto ou seleção balanceadora</li>
+                    <li><strong>Desvio de Hardy-Weinberg:</strong> Valores de F significativos sugerem endogamia ou outros fatores</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Atualizar valores exibidos dos controles deslizantes
+        const sliders = document.querySelectorAll('input[type="range"]');
+        sliders.forEach(slider => {
+            const valueDisplay = document.getElementById(slider.id + 'Value');
+            valueDisplay.textContent = slider.value;
+            
+            slider.addEventListener('input', () => {
+                valueDisplay.textContent = slider.value;
+                // Para mutação, mostrar notação científica para valores muito pequenos
+                if (slider.id.includes('mutation') && slider.value < 0.001) {
+                    valueDisplay.textContent = Number(slider.value).toExponential(2);
+                }
+            });
+        });
+        
+        // Configurar abas
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+                
+                // Se a aba de cálculos for selecionada, atualize os valores
+                if (tab.dataset.tab === 'calculations' && simulationData.length > 0) {
+                    updateCalculationValues();
+                }
+            });
+        });
+        
+        // Configurar botões de predefinição
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                applyPreset(btn.dataset.preset);
+            });
+        });
+        
+        // Aplicar predefinições
+        function applyPreset(presetName) {
+            switch(presetName) {
+                case 'hw-equilibrium':
+                    document.getElementById('populationSize').value = 1000;
+                    document.getElementById('initialA').value = 0.5;
+                    document.getElementById('initialAValue').textContent = 0.5;
+                    document.getElementById('mutationAtoa').value = 0.0001;
+                    document.getElementById('mutationAtoaValue').textContent = '1e-4';
+                    document.getElementById('mutationatoA').value = 0.0001;
+                    document.getElementById('mutationatoAValue').textContent = '1e-4';
+                    document.getElementById('fitnessAA').value = 1.0;
+                    document.getElementById('fitnessAAValue').textContent = 1.0;
+                    document.getElementById('fitnessAa').value = 1.0;
+                    document.getElementById('fitnessAaValue').textContent = 1.0;
+                    document.getElementById('fitnessaa').value = 1.0;
+                    document.getElementById('fitnessaaValue').textContent = 1.0;
+                    document.getElementById('migrationRate').value = 0;
+                    document.getElementById('migrationRateValue').textContent = 0;
+                    break;
+                    
+                case 'selection':
+                    document.getElementById('populationSize').value = 1000;
+                    document.getElementById('initialA').value = 0.1;
+                    document.getElementById('initialAValue').textContent = 0.1;
+                    document.getElementById('mutationAtoa').value = 0.0001;
+                    document.getElementById('mutationAtoaValue').textContent = '1e-4';
+                    document.getElementById('mutationatoA').value = 0.0001;
+                    document.getElementById('mutationatoAValue').textContent = '1e-4';
+                    document.getElementById('fitnessAA').value = 1.0;
+                    document.getElementById('fitnessAAValue').textContent = 1.0;
+                    document.getElementById('fitnessAa').value = 0.95;
+                    document.getElementById('fitnessAaValue').textContent = 0.95;
+                    document.getElementById('fitnessaa').value = 0.9;
+                    document.getElementById('fitnessaaValue').textContent = 0.9;
+                    document.getElementById('migrationRate').value = 0;
+                    document.getElementById('migrationRateValue').textContent = 0;
+                    break;
+                    
+                case 'heterozygote':
+                    document.getElementById('populationSize').value = 1000;
+                    document.getElementById('initialA').value = 0.3;
+                    document.getElementById('initialAValue').textContent = 0.3;
+                    document.getElementById('mutationAtoa').value = 0.0001;
+                    document.getElementById('mutationAtoaValue').textContent = '1e-4';
+                    document.getElementById('mutationatoA').value = 0.0001;
+                    document.getElementById('mutationatoAValue').textContent = '1e-4';
+                    document.getElementById('fitnessAA').value = 0.9;
+                    document.getElementById('fitnessAAValue').textContent = 0.9;
+                    document.getElementById('fitnessAa').value = 1.0;
+                    document.getElementById('fitnessAaValue').textContent = 1.0;
+                    document.getElementById('fitnessaa').value = 0.9;
+                    document.getElementById('fitnessaaValue').textContent = 0.9;
+                    document.getElementById('migrationRate').value = 0;
+                    document.getElementById('migrationRateValue').textContent = 0;
+                    break;
+                    
+                case 'mutation':
+                    document.getElementById('populationSize').value = 10000;
+                    document.getElementById('initialA').value = 1.0;
+                    document.getElementById('initialAValue').textContent = 1.0;
+                    document.getElementById('mutationAtoa').value = 0.001;
+                    document.getElementById('mutationAtoaValue').textContent = 0.001;
+                    document.getElementById('mutationatoA').value = 0.0001;
+                    document.getElementById('mutationatoAValue').textContent = '1e-4';
+                    document.getElementById('fitnessAA').value = 1.0;
+                    document.getElementById('fitnessAAValue').textContent = 1.0;
+                    document.getElementById('fitnessAa').value = 1.0;
+                    document.getElementById('fitnessAaValue').textContent = 1.0;
+                    document.getElementById('fitnessaa').value = 0.9;
+                    document.getElementById('fitnessaaValue').textContent = 0.9;
+                    document.getElementById('migrationRate').value = 0;
+                    document.getElementById('migrationRateValue').textContent = 0;
+                    break;
+                    
+                case 'founder':
+                    document.getElementById('populationSize').value = 100;
+                    document.getElementById('initialA').value = 0.01;
+                    document.getElementById('initialAValue').textContent = 0.01;
+                    document.getElementById('mutationAtoa').value = 0.0001;
+                    document.getElementById('mutationAtoaValue').textContent = '1e-4';
+                    document.getElementById('mutationatoA').value = 0.0001;
+                    document.getElementById('mutationatoAValue').textContent = '1e-4';
+                    document.getElementById('fitnessAA').value = 1.0;
+                    document.getElementById('fitnessAAValue').textContent = 1.0;
+                    document.getElementById('fitnessAa').value = 1.0;
+                    document.getElementById('fitnessAaValue').textContent = 1.0;
+                    document.getElementById('fitnessaa').value = 1.0;
+                    document.getElementById('fitnessaaValue').textContent = 1.0;
+                    document.getElementById('migrationRate').value = 0;
+                    document.getElementById('migrationRateValue').textContent = 0;
+                    break;
+            }
+            
+            // Atualizar todos os sliders
+            sliders.forEach(slider => {
+                const valueDisplay = document.getElementById(slider.id + 'Value');
+                valueDisplay.textContent = slider.value;
+                if (slider.id.includes('mutation') && slider.value < 0.001) {
+                    valueDisplay.textContent = Number(slider.value).toExponential(2);
+                }
+            });
+        }
+        
+        // Variáveis globais
+        let frequencyChart, genotypeChart, diversityChart, multipleRunsChart;
+        let simulationData = [];
+        let multipleRunsData = [];
+        let currentParameters = {};
+        
+        // Função principal de simulação
+        function simulatePopulation() {
+            // Obter valores dos inputs
+            currentParameters = {
+                populationSize: parseInt(document.getElementById('populationSize').value),
+                initialA: parseFloat(document.getElementById('initialA').value),
+                generations: parseInt(document.getElementById('generations').value),
+                simulationRuns: parseInt(document.getElementById('simulationRuns').value),
+                mutationAtoa: parseFloat(document.getElementById('mutationAtoa').value),
+                mutationatoA: parseFloat(document.getElementById('mutationatoA').value),
+                fitnessAA: parseFloat(document.getElementById('fitnessAA').value),
+                fitnessAa: parseFloat(document.getElementById('fitnessAa').value),
+                fitnessaa: parseFloat(document.getElementById('fitnessaa').value),
+                migrationRate: parseFloat(document.getElementById('migrationRate').value),
+                migrantA: parseFloat(document.getElementById('migrantA').value)
+            };
+            
+            // Validar parâmetros
+            if (!validateParameters(currentParameters)) {
+                return;
+            }
+            
+            // Executar múltiplas simulações para análise estatística
+            multipleRunsData = [];
+            for (let run = 0; run < currentParameters.simulationRuns; run++) {
+                // Inicializar população
+                let freqA = currentParameters.initialA;
+                let freqa = 1 - currentParameters.initialA;
+                
+                // Calcular frequências iniciais de Hardy-Weinberg
+                const initialHW = calculateHardyWeinberg(freqA, freqa);
+                
+                // Inicializar dados da simulação
+                const runData = [{
+                    generation: 0,
+                    freqA: freqA,
+                    freqa: freqa,
+                    freqAA: initialHW.AA,
+                    freqAa: initialHW.Aa,
+                    freqaa: initialHW.aa,
+                    observedAa: initialHW.Aa, // Inicialmente igual ao esperado
+                    expectedAa: initialHW.Aa,
+                    inbreedingCoefficient: 0,
+                    diversity: calculateDiversity(freqA, freqa)
+                }];
+                
+                // Simular cada geração
+                for (let gen = 1; gen <= currentParameters.generations; gen++) {
+                    // Aplicar mutação
+                    let newFreqA = freqA * (1 - currentParameters.mutationAtoa) + freqa * currentParameters.mutationatoA;
+                    let newFreqa = freqa * (1 - currentParameters.mutationatoA) + freqA * currentParameters.mutationAtoa;
+                    
+                    freqA = newFreqA;
+                    freqa = newFreqa;
+                    
+                    // Aplicar seleção natural
+                    const meanFitness = calculateMeanFitness(freqA, freqa, currentParameters.fitnessAA, currentParameters.fitnessAa, currentParameters.fitnessaa);
+                    
+                    // Calcular novas frequências após seleção (corrigido)
+                    freqA = (freqA * freqA * currentParameters.fitnessAA + 0.5 * 2 * freqA * freqa * currentParameters.fitnessAa) / meanFitness;
+                    freqa = (freqa * freqa * currentParameters.fitnessaa + 0.5 * 2 * freqA * freqa * currentParameters.fitnessAa) / meanFitness;
+                    
+                    // Normalizar frequências (devido a possíveis erros de arredondamento)
+                    const total = freqA + freqa;
+                    freqA = freqA / total;
+                    freqa = freqa / total;
+                    
+                    // Aplicar migração
+                    if (currentParameters.migrationRate > 0) {
+                        freqA = (1 - currentParameters.migrationRate) * freqA + currentParameters.migrationRate * currentParameters.migrantA;
+                        freqa = 1 - freqA;
+                    }
+                    
+                    // Aplicar deriva genética (em populações finitas)
+                    if (currentParameters.populationSize < Infinity) {
+                        // Simular amostragem aleatória (deriva) usando distribuição binomial
+                        const totalAlleles = 2 * currentParameters.populationSize;
+                        const countA = binomialRandom(totalAlleles, freqA);
+                        freqA = countA / totalAlleles;
+                        freqa = 1 - freqA;
+                    }
+                    
+                    // Calcular frequências genotípicas observadas e esperadas
+                    const hwExpected = calculateHardyWeinberg(freqA, freqa);
+                    const observed = calculateObservedGenotypes(freqA, freqa, currentParameters.populationSize);
+                    
+                    // Calcular coeficiente de endogamia (F)
+                    const inbreedingCoefficient = calculateInbreedingCoefficient(
+                        hwExpected.Aa, observed.Aa
+                    );
+                    
+                    // Calcular diversidade genética
+                    const diversity = calculateDiversity(freqA, freqa);
+                    
+                    // Armazenar resultados
+                    runData.push({
+                        generation: gen,
+                        freqA: freqA,
+                        freqa: freqa,
+                        freqAA: observed.AA,
+                        freqAa: observed.Aa,
+                        freqaa: observed.aa,
+                        observedAa: observed.Aa,
+                        expectedAa: hwExpected.Aa,
+                        inbreedingCoefficient: inbreedingCoefficient,
+                        diversity: diversity
+                    });
+                }
+                
+                multipleRunsData.push(runData);
+            }
+            
+            // Usar a primeira execução para exibição principal
+            simulationData = multipleRunsData[0];
+            
+            // Exibir resultados
+            displayResults();
+            calculateStatistics();
+            showParametersUsed();
+            updateCalculationValues();
+            generateInterpretation();
+        }
+        
+        // Validar parâmetros de entrada
+        function validateParameters(params) {
+            // Verificar se as frequências iniciais são válidas
+            if (params.initialA < 0 || params.initialA > 1) {
+                alert("A frequência inicial do alelo A deve estar entre 0 e 1.");
+                return false;
+            }
+            
+            // Verificar se os valores de fitness são válidos
+            if (params.fitnessAA < 0 || params.fitnessAA > 1 || 
+                params.fitnessAa < 0 || params.fitnessAa > 1 || 
+                params.fitnessaa < 0 || params.fitnessaa > 1) {
+                alert("Os valores de fitness devem estar entre 0 e 1.");
+                return false;
+            }
+            
+            // Verificar se as taxas de mutação são válidas
+            if (params.mutationAtoa < 0 || params.mutationAtoa > 1 || 
+                params.mutationatoA < 0 || params.mutationatoA > 1) {
+                alert("As taxas de mutação devem estar entre 0 e 1.");
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Funções auxiliares para cálculos genéticos
+        function calculateHardyWeinberg(freqA, freqa) {
+            return {
+                AA: freqA * freqA,
+                Aa: 2 * freqA * freqa,
+                aa: freqa * freqa
+            };
+        }
+        
+        function calculateMeanFitness(freqA, freqa, fitnessAA, fitnessAa, fitnessaa) {
+            const freqAA = freqA * freqA;
+            const freqAa = 2 * freqA * freqa;
+            const freqaa = freqa * freqa;
+            
+            return (freqAA * fitnessAA) + (freqAa * fitnessAa) + (freqaa * fitnessaa);
+        }
+        
+        function calculateObservedGenotypes(freqA, freqa, populationSize) {
+            // Para populações finitas, simular a distribuição real de genótipos
+            if (populationSize < Infinity) {
+                // Calcular frequências esperadas
+                const expectedAA = freqA * freqA;
+                const expectedAa = 2 * freqA * freqa;
+                const expectedaa = freqa * freqa;
+                
+                // Simular contagens reais com base nas probabilidades usando distribuição multinomial
+                const total = populationSize;
+                const countAA = binomialRandom(total, expectedAA);
+                const remaining = total - countAA;
+                const countAa = binomialRandom(remaining, expectedAa / (1 - expectedAA));
+                const countaa = remaining - countAa;
+                
+                return {
+                    AA: countAA / total,
+                    Aa: countAa / total,
+                    aa: countaa / total
+                };
+            }
+            
+            // Para populações infinitas, usar as proporções esperadas
+            return calculateHardyWeinberg(freqA, freqa);
+        }
+        
+        function calculateInbreedingCoefficient(expectedHeterozygosity, observedHeterozygosity) {
+            if (expectedHeterozygosity === 0) return 0;
+            return (expectedHeterozygosity - observedHeterozygosity) / expectedHeterozygosity;
+        }
+        
+        function calculateDiversity(freqA, freqa) {
+            // Diversidade genética (heterozigosidade esperada)
+            return 1 - (freqA * freqA + freqa * freqa);
+        }
+        
+        function binomialRandom(n, p) {
+            // Gera uma amostra de uma distribuição binomial usando aproximação normal para n grande
+            if (n <= 30) {
+                // Para n pequeno, usar método direto
+                let successes = 0;
+                for (let i = 0; i < n; i++) {
+                    if (Math.random() < p) successes++;
+                }
+                return successes;
+            } else {
+                // Para n grande, usar aproximação normal
+                const mean = n * p;
+                const variance = n * p * (1 - p);
+                const stdDev = Math.sqrt(variance);
+                
+                // Usar Box-Muller para gerar normal
+                let u = 0, v = 0;
+                while(u === 0) u = Math.random();
+                while(v === 0) v = Math.random();
+                const normal = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+                
+                // Aplicar transformação e garantir que está dentro dos limites
+                let result = Math.round(mean + stdDev * normal);
+                result = Math.max(0, Math.min(n, result));
+                return result;
+            }
+        }
+        
+        // Atualizar valores nos cálculos
+        function updateCalculationValues() {
+            if (!currentParameters.initialA) return;
+            
+            const p = currentParameters.initialA;
+            const q = 1 - p;
+            const mu = currentParameters.mutationAtoa;
+            const nu = currentParameters.mutationatoA;
+            const w11 = currentParameters.fitnessAA;
+            const w12 = currentParameters.fitnessAa;
+            const w22 = currentParameters.fitnessaa;
+            const m = currentParameters.migrationRate;
+            const pm = currentParameters.migrantA;
+            const N = currentParameters.populationSize;
+            
+            // Cálculos iniciais de Hardy-Weinberg
+            document.getElementById('calc-initial-p').textContent = p.toFixed(2);
+            document.getElementById('calc-initial-p2').textContent = p.toFixed(2);
+            document.getElementById('calc-initial-q').textContent = q.toFixed(2);
+            document.getElementById('calc-initial-q2').textContent = q.toFixed(2);
+            
+            const initialAA = (p * p).toFixed(2);
+            const initialAa = (2 * p * q).toFixed(2);
+            const initialaa = (q * q).toFixed(2);
+            
+            document.querySelectorAll('#calc-initial-aa').forEach(el => {
+                el.textContent = initialAA;
+            });
+            
+            // Cálculos de mutação
+            document.getElementById('calc-mutation-p').textContent = p.toFixed(2);
+            document.getElementById('calc-mutation-mu').textContent = mu.toFixed(4);
+            document.getElementById('calc-mutation-q').textContent = q.toFixed(2);
+            document.getElementById('calc-mutation-nu').textContent = nu.toFixed(4);
+            
+            const mutationP = (p * (1 - mu) + q * nu).toFixed(4);
+            document.getElementById('calc-mutation-result').textContent = mutationP;
+            
+            document.getElementById('calc-mutation-q2').textContent = q.toFixed(2);
+            document.getElementById('calc-mutation-nu2').textContent = nu.toFixed(4);
+            document.getElementById('calc-mutation-p2').textContent = p.toFixed(2);
+            document.getElementById('calc-mutation-mu2').textContent = mu.toFixed(4);
+            
+            const mutationQ = (q * (1 - nu) + p * mu).toFixed(4);
+            document.getElementById('calc-mutation-result2').textContent = mutationQ;
+            
+            // Cálculos de seleção
+            document.getElementById('calc-selection-p2').textContent = (p*p).toFixed(2);
+            document.getElementById('calc-selection-w11').textContent = w11.toFixed(1);
+            document.getElementById('calc-selection-p').textContent = p.toFixed(1);
+            document.getElementById('calc-selection-q').textContent = q.toFixed(1);
+            document.getElementById('calc-selection-w12').textContent = w12.toFixed(1);
+            document.getElementById('calc-selection-q2').textContent = (q*q).toFixed(2);
+            document.getElementById('calc-selection-w22').textContent = w22.toFixed(1);
+            
+            const meanFitness = (p*p*w11 + 2*p*q*w12 + q*q*w22).toFixed(3);
+            document.getElementById('calc-selection-meanfitness').textContent = meanFitness;
+            document.getElementById('calc-selection-meanfitness-2').textContent = meanFitness;
+            
+            document.getElementById('calc-selection-p2-2').textContent = (p*p).toFixed(2);
+            document.getElementById('calc-selection-w11-2').textContent = w11.toFixed(1);
+            document.getElementById('calc-selection-p-2').textContent = p.toFixed(1);
+            document.getElementById('calc-selection-q-2').textContent = q.toFixed(1);
+            document.getElementById('calc-selection-w12-2').textContent = w12.toFixed(1);
+            
+            const newP = ((p*p*w11 + p*q*w12) / meanFitness).toFixed(3);
+            document.getElementById('calc-selection-result').textContent = newP;
+            
+            // Cálculos de migração
+            document.getElementById('calc-migration-m').textContent = m.toFixed(1);
+            document.getElementById('calc-migration-p').textContent = p.toFixed(1);
+            document.getElementById('calc-migration-m2').textContent = m.toFixed(1);
+            document.getElementById('calc-migration-pm').textContent = pm.toFixed(1);
+            
+            const migrationP = ((1 - m)*p + m*pm).toFixed(1);
+            document.getElementById('calc-migration-result').textContent = migrationP;
+            
+            // Cálculos de deriva genética
+            document.getElementById('calc-drift-N').textContent = N;
+            document.getElementById('calc-drift-p').textContent = p.toFixed(1);
+            
+            const expectedA = (2 * N * p).toFixed(0);
+            document.getElementById('calc-drift-expected').textContent = expectedA;
+            
+            // Cálculos de endogamia
+            document.getElementById('calc-f-he').textContent = initialAa;
+            document.getElementById('calc-f-ho').textContent = initialAa;
+            document.getElementById('calc-f-he2').textContent = initialAa;
+            
+            const f = ((initialAa - initialAa) / initialAa).toFixed(1);
+            document.getElementById('calc-f-result').textContent = f;
+            
+            // Cálculos de diversidade
+            document.getElementById('calc-diversity-p').textContent = p.toFixed(1);
+            document.getElementById('calc-diversity-q').textContent = q.toFixed(1);
+            
+            const diversity = (2 * p * q).toFixed(2);
+            document.getElementById('calc-diversity-result').textContent = diversity;
+        }
+        
+        // Exibir resultados em gráfico e tabela
+        function displayResults() {
+            // Preparar dados para os gráficos
+            const generations = simulationData.map(data => data.generation);
+            const freqAData = simulationData.map(data => data.freqA);
+            const freqaaData = simulationData.map(data => data.freqaa);
+            
+            const freqAAData = simulationData.map(data => data.freqAA);
+            const freqAaData = simulationData.map(data => data.freqAa);
+            const expectedAaData = simulationData.map(data => data.expectedAa);
+            
+            const diversityData = simulationData.map(data => data.diversity);
+            const inbreedingData = simulationData.map(data => data.inbreedingCoefficient);
+            
+            // Criar ou atualizar gráfico de frequências alélicas
+            const freqCtx = document.getElementById('frequencyChart').getContext('2d');
+            if (frequencyChart) frequencyChart.destroy();
+            
+            frequencyChart = new Chart(freqCtx, {
+                type: 'line',
+                data: {
+                    labels: generations,
+                    datasets: [
+                        {
+                            label: 'Frequência do alelo A',
+                            data: freqAData,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Frequência do genótipo aa',
+                            data: freqaaData,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            fill: false,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'Frequência'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Geração'
+                            }
+                        }
+                    },
+                    plugins: {
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x'
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Evolução das Frequências Alélicas e Genotípicas'
+                        }
+                    }
+                }
+            });
+            
+            // Criar gráfico de genótipos
+            const genotypeCtx = document.getElementById('genotypeChart').getContext('2d');
+            if (genotypeChart) genotypeChart.destroy();
+            
+            genotypeChart = new Chart(genotypeCtx, {
+                type: 'line',
+                data: {
+                    labels: generations,
+                    datasets: [
+                        {
+                            label: 'Genótipo AA (observado)',
+                            data: freqAAData,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Genótipo Aa (observado)',
+                            data: freqAaData,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Genótipo Aa (esperado por H-W)',
+                            data: expectedAaData,
+                            borderColor: 'rgba(255, 159, 64, 1)',
+                            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                            fill: false,
+                            tension: 0.1,
+                            borderDash: [5, 5]
+                        },
+                        {
+                            label: 'Genótipo aa (observado)',
+                            data: freqaaData,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            fill: false,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'Frequência'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Geração'
+                            }
+                        }
+                    },
+                    plugins: {
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x'
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribuição de Genótipos (Observado vs. Esperado)'
+                        }
+                    }
+                }
+            });
+            
+            // Criar gráfico de diversidade e endogamia
+            const diversityCtx = document.getElementById('diversityChart').getContext('2d');
+            if (diversityChart) diversityChart.destroy();
+            
+            diversityChart = new Chart(diversityCtx, {
+                type: 'line',
+                data: {
+                    labels: generations,
+                    datasets: [
+                        {
+                            label: 'Diversidade Genética (H)',
+                            data: diversityData,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Coeficiente de Endogamia (F)',
+                            data: inbreedingData,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'Diversidade Genética'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'Coeficiente de Endogamia'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Geração'
+                            }
+                        }
+                    },
+                    plugins: {
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x'
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Diversidade Genética e Endogamia'
+                        }
+                    }
+                }
+            });
+            
+            // Criar gráfico de múltiplas execuções
+            const multipleRunsCtx = document.getElementById('multipleRunsChart').getContext('2d');
+            if (multipleRunsChart) multipleRunsChart.destroy();
+            
+            if (multipleRunsData.length > 1) {
+                const datasets = [];
+                const colors = [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(153, 102, 255, 0.7)'
+                ];
+                
+                for (let i = 0; i < Math.min(multipleRunsData.length, 5); i++) {
+                    const runData = multipleRunsData[i];
+                    datasets.push({
+                        label: `Execução ${i+1}`,
+                        data: runData.map(data => data.freqA),
+                        borderColor: colors[i % colors.length],
+                        backgroundColor: colors[i % colors.length],
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 0
+                    });
+                }
+                
+                multipleRunsChart = new Chart(multipleRunsCtx, {
+                    type: 'line',
+                    data: {
+                        labels: generations,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 1,
+                                title: {
+                                    display: true,
+                                    text: 'Frequência do Alelo A'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Geração'
+                                }
+                            }
+                        },
+                        plugins: {
+                            zoom: {
+                                zoom: {
+                                    wheel: {
+                                        enabled: true
+                                    },
+                                    pinch: {
+                                        enabled: true
+                                    },
+                                    mode: 'x'
+                                },
+                                pan: {
+                                    enabled: true,
+                                    mode: 'x'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Variação entre Múltiplas Execuções (Deriva Genética)'
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Criar tabela de dados
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Geração</th>
+                            <th>Freq. A</th>
+                            <th>Freq. a</th>
+                            <th>Freq. AA</th>
+                            <th>Freq. Aa (obs)</th>
+                            <th>Freq. Aa (esp)</th>
+                            <th>Freq. aa</th>
+                            <th>Coef. Endogamia (F)</th>
+                            <th>Diversidade (H)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // Adicionar uma linha a cada 5 gerações para não sobrecarregar a tabela
+            for (let i = 0; i < simulationData.length; i += 5) {
+                const data = simulationData[i];
+                tableHTML += `
+                    <tr>
+                        <td>${data.generation}</td>
+                        <td>${data.freqA.toFixed(4)}</td>
+                        <td>${data.freqa.toFixed(4)}</td>
+                        <td>${data.freqAA.toFixed(4)}</td>
+                        <td>${data.observedAa.toFixed(4)}</td>
+                        <td>${data.expectedAa.toFixed(4)}</td>
+                        <td>${data.freqaa.toFixed(4)}</td>
+                        <td>${data.inbreedingCoefficient.toFixed(4)}</td>
+                        <td>${data.diversity.toFixed(4)}</td>
+                    </tr>
+                `;
+            }
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('tableContainer').innerHTML = tableHTML;
+            document.getElementById('results').style.display = 'block';
+        }
+        
+        // Calcular estatísticas resumidas
+        function calculateStatistics() {
+            const lastGen = simulationData[simulationData.length - 1];
+            
+            // Calcular coeficiente de endogamia médio
+            const avgInbreeding = simulationData.reduce((sum, data) => sum + data.inbreedingCoefficient, 0) / simulationData.length;
+            
+            // Calcular diversidade genética média
+            const avgDiversity = simulationData.reduce((sum, data) => sum + data.diversity, 0) / simulationData.length;
+            
+            // Verificar se algum alelo foi fixado
+            let fixedAllele = "Nenhum";
+            if (lastGen.freqA > 0.999) fixedAllele = "A";
+            if (lastGen.freqa > 0.999) fixedAllele = "a";
+            
+            // Calcular força de seleção (aprox.)
+            const fitnessAA = parseFloat(document.getElementById('fitnessAA').value);
+            const fitnessaa = parseFloat(document.getElementById('fitnessaa').value);
+            const selectionStrength = Math.abs(fitnessAA - fitnessaa);
+            
+            // Atualizar estatísticas na interface
+            document.getElementById('fStat').textContent = avgInbreeding.toFixed(3);
+            document.getElementById('diversityStat').textContent = avgDiversity.toFixed(3);
+            document.getElementById('selectionStat').textContent = selectionStrength.toFixed(3);
+            document.getElementById('fixedStat').textContent = fixedAllele;
+            
+            // Gerar resumo da simulação
+            let summaryText = `Após ${simulationData.length-1} gerações, `;
+            
+            if (fixedAllele !== "Nenhum") {
+                summaryText += `o alelo ${fixedAllele} foi fixado na população. `;
+            } else {
+                summaryText += `ambos os alelos permanecem na população com frequências ${lastGen.freqA.toFixed(3)} (A) e ${lastGen.freqa.toFixed(3)} (a). `;
+            }
+            
+            summaryText += `A diversidade genética final é ${lastGen.diversity.toFixed(3)}. `;
+            
+            if (avgInbreeding > 0.1) {
+                summaryText += `O coeficiente de endogamia médio de ${avgInbreeding.toFixed(3)} indica desvio significativo do equilíbrio de Hardy-Weinberg.`;
+            } else {
+                summaryText += `A população mantém-se próxima do equilíbrio de Hardy-Weinberg.`;
+            }
+            
+            document.getElementById('simulationSummary').textContent = summaryText;
+        }
+        
+        // Gerar interpretação dos resultados
+        function generateInterpretation() {
+            const lastGen = simulationData[simulationData.length - 1];
+            const initialGen = simulationData[0];
+            const avgInbreeding = simulationData.reduce((sum, data) => sum + data.inbreedingCoefficient, 0) / simulationData.length;
+            
+            let title = "Interpretação dos Resultados";
+            let content = "";
+            
+            // Verificar fixação
+            if (lastGen.freqA > 0.999) {
+                title = "Fixação do Alelo A";
+                content = `O alelo A foi fixado na população (frequência > 99.9%). Isso ocorreu porque `;
+                
+                if (currentParameters.fitnessAA >= currentParameters.fitnessaa && 
+                    currentParameters.fitnessAA >= currentParameters.fitnessAa) {
+                    content += `o genótipo AA tem a maior aptidão (${currentParameters.fitnessAA}), resultando em seleção direcional favorável ao alelo A.`;
+                } else if (currentParameters.mutationatoA > currentParameters.mutationAtoa) {
+                    content += `a taxa de mutação reversa (a → A) é maior que a taxa forward (A → a).`;
+                } else if (currentParameters.migrationRate > 0 && currentParameters.migrantA > 0.5) {
+                    content += `a migração introduziu continuamente mais alelos A na população.`;
+                } else {
+                    content += `de processos aleatórios (deriva genética) que favoreceram o alelo A.`;
+                }
+            } 
+            else if (lastGen.freqa > 0.999) {
+                title = "Fixação do Alelo a";
+                content = `O alelo a foi fixado na população (frequência > 99.9%). Isso ocorreu porque `;
+                
+                if (currentParameters.fitnessaa >= currentParameters.fitnessAA && 
+                    currentParameters.fitnessaa >= currentParameters.fitnessAa) {
+                    content += `o genótipo aa tem a maior aptidão (${currentParameters.fitnessaa}), resultando em seleção direcional favorável ao alelo a.`;
+                } else if (currentParameters.mutationAtoa > currentParameters.mutationatoA) {
+                    content += `a taxa de mutação forward (A → a) é maior que a taxa reversa (a → A).`;
+                } else if (currentParameters.migrationRate > 0 && currentParameters.migrantA < 0.5) {
+                    content += `a migração introduziu continuamente mais alelos a na população.`;
+                } else {
+                    content += `de processos aleatórios (deriva genética) que favoreceram o alelo a.`;
+                }
+            }
+            // Verificar manutenção de polimorfismo
+            else if (lastGen.freqA > 0.1 && lastGen.freqA < 0.9) {
+                title = "Manutenção de Polimorfismo";
+                content = `Ambos os alelos persistem na população (polimorfismo). Isso pode ser explicado por:`;
+                
+                if (currentParameters.fitnessAa > currentParameters.fitnessAA && 
+                    currentParameters.fitnessAa > currentParameters.fitnessaa) {
+                    content += ` <strong>vantagem do heterozigoto</strong>, onde o genótipo Aa tem a maior aptidão (${currentParameters.fitnessAa}).`;
+                } else if (Math.abs(currentParameters.mutationAtoa - currentParameters.mutationatoA) < 0.001 &&
+                          currentParameters.fitnessAA === 1 && currentParameters.fitnessaa === 1) {
+                    content += ` <strong>equilíbrio mutação-seleção</strong>, com taxas de mutação balanceadas e nenhuma seleção.`;
+                } else if (currentParameters.migrationRate > 0) {
+                    content += ` <strong>fluxo gênico</strong> através da migração, que mantém a variação na população.`;
+                } else {
+                    content += ` a <strong>deriva genética</strong> em uma população suficientemente grande, que não levou à fixação.`;
+                }
+            }
+            // Verificar se há desvio de Hardy-Weinberg
+            else if (Math.abs(avgInbreeding) > 0.1) {
+                title = "Desvio de Hardy-Weinberg";
+                content = `A população apresenta desvio significativo do equilíbrio de Hardy-Weinberg (F = ${avgInbreeding.toFixed(3)}). `;
+                
+                if (avgInbreeding > 0) {
+                    content += `O valor positivo de F indica <strong>endogamia</strong> ou acasalamento preferencial entre parentes.`;
+                } else {
+                    content += `O valor negativo de F indica <strong>exogamia</strong> ou acasalamento preferencial entre não parentes.`;
+                }
+            }
+            // Caso padrão
+            else {
+                title = "População em Evolução";
+                content = `A população está evoluindo sob a influência dos fatores especificados. `;
+                
+                const deltaFreq = lastGen.freqA - initialGen.freqA;
+                if (Math.abs(deltaFreq) > 0.1) {
+                    content += `Há uma mudança direcional na frequência alélica (Δ = ${deltaFreq.toFixed(3)}), `;
+                    
+                    if (deltaFreq > 0) {
+                        content += `sugerindo seleção favorável ao alelo A ou migração com alto fluxo de A.`;
+                    } else {
+                        content += `sugerindo seleção favorável ao alelo a ou migração com alto fluxo de a.`;
+                    }
+                } else {
+                    content += `As frequências alélicas permanecem relativamente estáveis, sugerindo equilíbrio aproximado entre as forças evolutivas.`;
+                }
+            }
+            
+            // Adicionar informações sobre diversidade
+            content += `<br><br>A diversidade genética final é ${lastGen.diversity.toFixed(3)}. `;
+            
+            if (lastGen.diversity < 0.1) {
+                content += `Este valor baixo indica pouca variação genética na população.`;
+            } else if (lastGen.diversity > 0.3) {
+                content += `Este valor alto indica considerável variação genética mantida na população.`;
+            }
+            
+            document.getElementById('interpretation-title').textContent = title;
+            document.getElementById('interpretation-content').innerHTML = content;
+        }
+        
+        // Mostrar parâmetros utilizados
+        function showParametersUsed() {
+            const params = [
+                {name: "Tamanho da população", value: document.getElementById('populationSize').value},
+                {name: "Frequência inicial do alelo A", value: document.getElementById('initialA').value},
+                {name: "Número de gerações", value: document.getElementById('generations').value},
+                {name: "Taxa de mutação A→a", value: document.getElementById('mutationAtoa').value},
+                {name: "Taxa de mutação a→A", value: document.getElementById('mutationatoA').value},
+                {name: "Fitness do genótipo AA", value: document.getElementById('fitnessAA').value},
+                {name: "Fitness do genótipo Aa", value: document.getElementById('fitnessAa').value},
+                {name: "Fitness do genótipo aa", value: document.getElementById('fitnessaa').value},
+                {name: "Taxa de migração", value: document.getElementById('migrationRate').value},
+                {name: "Frequência do alelo A em migrantes", value: document.getElementById('migrantA').value}
+            ];
+            
+            let html = "<ul>";
+            params.forEach(param => {
+                html += `<li><strong>${param.name}:</strong> ${param.value}</li>`;
+            });
+            html += "</ul>";
+            
+            document.getElementById('parametersUsed').innerHTML = html;
+        }
+        
+        // Exportar dados para CSV
+        function exportToCSV() {
+            if (simulationData.length === 0) {
+                alert("Execute uma simulação primeiro para exportar dados.");
+                return;
+            }
+            
+            let csvContent = "Geração,Freq_A,Freq_a,Freq_AA,Freq_Aa_obs,Freq_Aa_esp,Freq_aa,Coef_Endogamia,Diversidade\n";
+            
+            simulationData.forEach(data => {
+                csvContent += `${data.generation},${data.freqA.toFixed(6)},${data.freqa.toFixed(6)},${data.freqAA.toFixed(6)},${data.observedAa.toFixed(6)},${data.expectedAa.toFixed(6)},${data.freqaa.toFixed(6)},${data.inbreedingCoefficient.toFixed(6)},${data.diversity.toFixed(6)}\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "dados_simulacao_genetica.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Exportar configuração
+        function exportConfiguration() {
+            const config = {
+                populationSize: document.getElementById('populationSize').value,
+                initialA: document.getElementById('initialA').value,
+                generations: document.getElementById('generations').value,
+                simulationRuns: document.getElementById('simulationRuns').value,
+                mutationAtoa: document.getElementById('mutationAtoa').value,
+                mutationatoA: document.getElementById('mutationatoA').value,
+                fitnessAA: document.getElementById('fitnessAA').value,
+                fitnessAa: document.getElementById('fitnessAa').value,
+                fitnessaa: document.getElementById('fitnessaa').value,
+                migrationRate: document.getElementById('migrationRate').value,
+                migrantA: document.getElementById('migrantA').value,
+                exportDate: new Date().toISOString()
+            };
+            
+            const configJSON = JSON.stringify(config, null, 2);
+            const blob = new Blob([configJSON], { type: 'application/json;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "configuracao_simulacao_genetica.json");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Event listeners
+        document.getElementById('simulateBtn').addEventListener('click', simulatePopulation);
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            // Restaurar valores padrão
+            document.getElementById('populationSize').value = 1000;
+            document.getElementById('initialA').value = 0.7;
+            document.getElementById('initialAValue').textContent = 0.7;
+            document.getElementById('generations').value = 100;
+            document.getElementById('simulationRuns').value = 5;
+            
+            document.getElementById('mutationAtoa').value = 0.0001;
+            document.getElementById('mutationAtoaValue').textContent = '1e-4';
+            document.getElementById('mutationatoA').value = 0.0001;
+            document.getElementById('mutationatoAValue').textContent = '1e-4';
+            
+            document.getElementById('fitnessAA').value = 1.0;
+            document.getElementById('fitnessAAValue').textContent = 1.0;
+            document.getElementById('fitnessAa').value = 1.0;
+            document.getElementById('fitnessAaValue').textContent = 1.0;
+            document.getElementById('fitnessaa').value = 1.0;
+            document.getElementById('fitnessaaValue').textContent = 1.0;
+            
+            document.getElementById('migrationRate').value = 0;
+            document.getElementById('migrationRateValue').textContent = 0;
+            document.getElementById('migrantA').value = 0.5;
+            document.getElementById('migrantAValue').textContent = 0.5;
+            
+            // Ocultar resultados
+            document.getElementById('results').style.display = 'none';
+        });
+        
+        document.getElementById('exportDataBtn').addEventListener('click', exportToCSV);
+        document.getElementById('exportConfigBtn').addEventListener('click', exportConfiguration);
+    </script>
+</body>
+</html>
